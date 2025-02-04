@@ -111,7 +111,7 @@ func main() {
 })
 
 
-// PUT request to update user information
+// PUT request to update user information only updates
 app.Put("/users/:id", func(c *fiber.Ctx) error {
     id := c.Params("id") // Get the user ID from the URL parameters
     var user struct {
