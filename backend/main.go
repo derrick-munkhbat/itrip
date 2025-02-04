@@ -12,13 +12,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// User struct to represent the user data
-type User struct {
-    FirstName string `json:"first_name"`
-    LastName  string `json:"last_name"`
-    Email     string `json:"email"`
-    Password  string `json:"password"`
-}
+// // User struct to represent the user data
+// type User struct {
+//     FirstName string `json:"first_name"`
+//     LastName  string `json:"last_name"`
+//     Email     string `json:"email"`
+//     Password  string `json:"password"`
+// }
 
 func main() {
 	// Load environment variables from .env file
@@ -76,6 +76,15 @@ func main() {
 
 		return c.JSON(results) // Return the results as JSON
 	})
+
+	// User struct to represent the user data
+	type User struct {
+	    FirstName string `json:"first_name"`
+	    LastName  string `json:"last_name"`
+	    Email     string `json:"email"`
+	    Password  string `json:"password"`
+	}
+
 
 	// POST request to register a new user
     app.Post("/register", func(c *fiber.Ctx) error {
