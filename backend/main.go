@@ -111,6 +111,60 @@ func main() {
 })
 
 
+// PUT request to update user information
+app.Put("/users/:id", func(c *fiber.Ctx) error {
+    id := c.Params("id") // Get the user ID from the URL parameters
+    var user struct {
+        FirstName string `json:"first_name"`
+        LastName  string `json:"last_name"`
+        Email     string `json:"email"`
+    }
+
+    // Parse the request body into the user struct
+    if err := c.BodyParser(&user); err != nil {
+        return c.Status(400).SendString("Invalid input")
+    }
+
+    // Update the user's information in the database
+    _, err := conn.Exec(context.Background(), "UPDATE users SET first_name = $1, last_name = $2, email = $3 WHERE user_id = $4",
+        user.FirstName, user.LastName, user.Email, id)
+    if err != nil {
+        return c.Status(500).SendString("Error updating user information in database")
+    }
+
+    return c.Status(200).SendString("User  information updated successfully")
+})
+
+
+// PUT request to update user password
+app.Put("/users/:id/password", func(c *fiber.Ctx) error {
+    id := c.Params("id") // Get the user ID from the URL parameters
+    var requestBody struct {
+        NewPassword string `json:"new_password"`
+    }
+
+    // Parse the request body into the requestBody struct
+    if err := c.BodyParser(&requestBody); err != nil {
+        return c.Status(400).SendString("Invalid input")
+    }
+
+    // Hash the new password
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(requestBody.NewPassword), bcrypt.DefaultCost)
+    if err != nil {
+        return c.Status(500).SendString("Error hashing password")
+    }
+
+    // Update the user's password in the database
+    _, err = conn.Exec(context.Background(), "UPDATE users SET password = $1 WHERE user_id = $2",
+        hashedPassword, id)
+    if err != nil {
+        return c.Status(500).SendString("Error updating password in database")
+    }
+
+    return c.Status(200).SendString("Password updated successfully")
+})
+
+
 	// Start the server
 	log.Fatal(app.Listen(":3000"))
 }
