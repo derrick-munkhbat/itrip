@@ -44,6 +44,7 @@ func main() {
 	app := fiber.New()
 
 	// GET request to retrieve data from the users table
+	// http://localhost:3000/users
 	app.Get("/users", func(c *fiber.Ctx) error {
 		rows, err := conn.Query(context.Background(), "SELECT user_id, first_name, last_name, email FROM users") // Exclude password
 		if err != nil {
@@ -87,6 +88,7 @@ func main() {
 
 
 	// POST request to register a new user
+	//http://localhost:3000/register
     app.Post("/register", func(c *fiber.Ctx) error {
     var user User
     // Parse the request body into the user struct
@@ -112,6 +114,7 @@ func main() {
 
 
 // PUT request to update user information only updates
+//http://localhost:3000/users/id
 app.Put("/users/:id", func(c *fiber.Ctx) error {
     id := c.Params("id") // Get the user ID from the URL parameters
     var user struct {
@@ -137,6 +140,7 @@ app.Put("/users/:id", func(c *fiber.Ctx) error {
 
 
 // PUT request to update user password
+//http://localhost:3000/users/id/password
 app.Put("/users/:id/password", func(c *fiber.Ctx) error {
     id := c.Params("id") // Get the user ID from the URL parameters
     var requestBody struct {
@@ -159,6 +163,18 @@ app.Put("/users/:id/password", func(c *fiber.Ctx) error {
         hashedPassword, id)
     if err != nil {
         return c.Status(500).SendString("Error updating password in database")
+    }
+
+    // Verify the password change
+    var storedPassword string
+    err = conn.QueryRow(context.Background(), "SELECT password FROM users WHERE user_id = $1", id).Scan(&storedPassword)
+    if err != nil {
+        return c.Status(500).SendString("Error retrieving updated password from database")
+    }
+
+    // Compare the new hashed password with the stored password
+    if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(requestBody.NewPassword)); err != nil {
+        return c.Status(500).SendString("Password change verification failed")
     }
 
     return c.Status(200).SendString("Password updated successfully")
