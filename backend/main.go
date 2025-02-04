@@ -6,19 +6,12 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// // User struct to represent the user data
-// type User struct {
-//     FirstName string `json:"first_name"`
-//     LastName  string `json:"last_name"`
-//     Email     string `json:"email"`
-//     Password  string `json:"password"`
-// }
 
 func main() {
 	// Load environment variables from .env file
@@ -42,6 +35,13 @@ func main() {
 
 	// Create a new Fiber app
 	app := fiber.New()
+	
+	 // Enable CORS for all origins
+    app.Use(cors.New(cors.Config{
+        AllowOrigins: "*", // Allow all origins (for development purposes)
+        AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+        AllowHeaders: "Origin, Content-Type, Accept",
+    }))
 
 	// GET request to retrieve data from the users table
 	// http://localhost:3000/users
@@ -93,23 +93,26 @@ func main() {
     var user User
     // Parse the request body into the user struct
     if err := c.BodyParser(&user); err != nil {
-        return c.Status(400).SendString("Invalid input")
+        return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
     }
 
     // Hash the password
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
     if err != nil {
-        return c.Status(500).SendString("Error hashing password")
+        return c.Status(500).JSON(fiber.Map{"error": "Error hashing password"})
     }
 
     // Insert the user into the database
     _, err = conn.Exec(context.Background(), "INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4)",
         user.FirstName, user.LastName, user.Email, hashedPassword)
     if err != nil {
-        return c.Status(500).SendString("Error saving user to database")
+        // Log the actual error message for debugging
+        log.Println("Error saving user to database:", err) // Log the error
+        return c.Status(500).JSON(fiber.Map{"error": "Error saving user to database"})
     }
 
-    return c.Status(201).SendString("User  registered successfully")
+    // Return a JSON response on successful registration
+    return c.Status(201).JSON(fiber.Map{"message": "User  registered successfully"})
 })
 
 
@@ -182,5 +185,5 @@ app.Put("/users/:id/password", func(c *fiber.Ctx) error {
 
 
 	// Start the server
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":8000"))
 }
