@@ -1,7 +1,7 @@
 "use client";
 
 // app/page.tsx
-import SignUpForm from "../components/SignUpForm";
+import SignUpForm from "@/components/SignUpForm";
 
 const Page: React.FC = () => {
   return (
