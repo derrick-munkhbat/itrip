@@ -35,10 +35,10 @@ const UserProfile: React.FC = () => {
       {user ? (
         <div className="mt-4">
           <p>
-            <strong>First Name:</strong> {user.firstName}
+            <strong>First Name:</strong> {user.first_name}
           </p>
           <p>
-            <strong>Last Name:</strong> {user.lastName}
+            <strong>Last Name:</strong> {user.last_name}
           </p>
           <p>
             <strong>Email:</strong> {user.email}

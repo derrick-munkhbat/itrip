@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 
 // Define the User interface
 interface User {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
 }
 
@@ -36,6 +36,7 @@ const useFetchUser = () => {
 
         if (response.ok) {
           const data = await response.json(); // Type the response
+          console.log("Fetched user data:", data); // Log the fetched data
           setUser(data); // Update to set the user data from the response
         } else {
           setError("Error fetching user data");
