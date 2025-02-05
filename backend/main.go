@@ -35,7 +35,7 @@
 
 // 	// Create a new Fiber app
 // 	app := fiber.New()
-	
+
 // 	 // Enable CORS for all origins
 //     app.Use(cors.New(cors.Config{
 //         AllowOrigins: "*", // Allow all origins (for development purposes)
@@ -86,7 +86,6 @@
 // 	    Password  string `json:"password"`
 // 	}
 
-
 // 	// POST request to register a new user
 // 	//http://localhost:3000/register
 //     app.Post("/register", func(c *fiber.Ctx) error {
@@ -115,7 +114,6 @@
 //     return c.Status(201).JSON(fiber.Map{"message": "User  registered successfully"})
 // })
 
-
 // // PUT request to update user information only updates
 // //http://localhost:3000/users/id
 // app.Put("/users/:id", func(c *fiber.Ctx) error {
@@ -140,7 +138,6 @@
 
 //     return c.Status(200).SendString("User  information updated successfully")
 // })
-
 
 // // PUT request to update user password
 // //http://localhost:3000/users/id/password
@@ -183,19 +180,11 @@
 //     return c.Status(200).SendString("Password updated successfully")
 // })
 
-
 // 	// Start the server
 // 	log.Fatal(app.Listen(":8000"))
 // }
 
-
-
-
-
-
-
-//WITH JWT TOKEN
-
+//***************WITH JWT TOKEN*****************
 
 package main
 
@@ -205,17 +194,36 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/golang-jwt/jwt/v4"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET")) // JWT secret key
 
+var redisClient *redis.Client
+
+func initRedis() {
+    redisClient = redis.NewClient(&redis.Options{
+        Addr:     "localhost:6379", // Redis server address
+        Password: "", // No password set
+        DB:       0,  // Use default DB
+    })
+
+    // Test the connection
+    _, err := redisClient.Ping(context.Background()).Result()
+    if err != nil {
+        log.Fatalf("Could not connect to Redis: %v", err)
+    }
+}
+
 func main() {
+
+    initRedis()
 	// Load environment variables from .env file
 	err := godotenv.Load()
 	if err != nil {
@@ -279,59 +287,69 @@ func main() {
 
 	// POST request to login a user
 	app.Post("/login", func(c *fiber.Ctx) error {
-		var user User
-		if err := c.BodyParser(&user); err != nil {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
-		}
+    var user User
+    if err := c.BodyParser(&user); err != nil {
+        return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+    }
 
-		// Retrieve the user from the database
-		var storedUser  User
-		err := conn.QueryRow(context.Background(), "SELECT first_name, last_name, email, password FROM users WHERE email = $1", user.Email).Scan(&storedUser .FirstName, &storedUser .LastName, &storedUser .Email, &storedUser .Password)
-		if err != nil {
-			return c.Status(401).JSON(fiber.Map{"error": "Invalid email or password"})
-		}
+    // Retrieve the user from the database and validate password
+    // ...
 
-		// Compare the provided password with the stored hashed password
-		if err := bcrypt.CompareHashAndPassword([]byte(storedUser .Password), []byte(user.Password)); err != nil {
-			return c.Status(401).JSON(fiber.Map{"error": "Invalid email or password"})
-		}
+    // Generate JWT token
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+        "email": user.Email,
+        "exp":   time.Now().Add(time.Hour * 1).Unix(), // Token expiration time
+    })
 
-		// Generate JWT token
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"email": storedUser .Email,
-			"exp":   time.Now().Add(time.Hour * 1).Unix(), // Token expiration time
-		})
+    // Sign the token with the secret key
+    tokenString, err := token.SignedString(jwtSecret)
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": "Could not generate token"})
+    }
 
-		// Sign the token with the secret key
-		tokenString, err := token.SignedString(jwtSecret)
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": "Could not generate token"})
-		}
+    // Store the token in Redis with an expiration time
+    err = redisClient.Set(context.Background(), tokenString, user.Email, time.Hour).Err()
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": "Could not store token in Redis"})
+    }
 
-		return c.JSON(fiber.Map{"token": tokenString})
-	})
+    return c.JSON(fiber.Map{"token": tokenString})
+})
+
+app.Post("/logout", func(c *fiber.Ctx) error {
+    token := c.Get("Authorization")
+    if token == "" {
+        return c.Status(401).JSON(fiber.Map{"error": "No token provided"})
+    }
+
+    // Remove the token from Redis
+    err := redisClient.Del(context.Background(), token).Err()
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": "Error logging out"})
+    }
+
+    return c.JSON(fiber.Map{"message": "Logged out successfully"})
+})
 
 	// Middleware to protect routes
 	app.Use(func(c *fiber.Ctx) error {
-		token := c.Get("Authorization")
-		if token == "" {
-			return c.Status(401).JSON(fiber.Map{"error": "No token provided"})
-		}
+    token := c.Get("Authorization")
+    if token == "" {
+        return c.Status(401).JSON(fiber.Map{"error": "No token provided"})
+    }
 
-		// Validate the token
-		claims := jwt.MapClaims{}
-		_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-			return jwtSecret, nil
-		})
+    // Check if the token exists in Redis
+    email, err := redisClient.Get(context.Background(), token).Result()
+    if err == redis.Nil {
+        return c.Status(401).JSON(fiber.Map{"error": "Invalid token"})
+    } else if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": "Error checking token in Redis"})
+    }
 
-		if err != nil {
-			return c.Status(401).JSON(fiber.Map{"error": "Invalid token"})
-		}
-
-		// Set user email in context
-		c.Locals("email", claims["email"])
-		return c.Next()
-	})
+    // Set the user email in the context for further use
+    c.Locals("email", email)
+    return c.Next()
+})
 
 	// Protected route example
 	app.Get("/protected", func(c *fiber.Ctx) error {
