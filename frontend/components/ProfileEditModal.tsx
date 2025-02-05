@@ -1,5 +1,3 @@
-// app/components/ProfileEditModal.tsx
-
 import React, { useState } from "react";
 
 interface ProfileEditModalProps {
@@ -34,12 +32,21 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [message, setMessage] = useState("");
 
   const handleSubmit = async () => {
+    // Check if new password is provided and matches the confirmation
     if (newPassword && newPassword !== confirmPassword) {
       setMessage("New passwords do not match.");
       return;
     }
 
-    await onUpdate(firstName, lastName, email, currentPassword, newPassword);
+    // Call onUpdate with empty strings for passwords if not changing them
+    await onUpdate(
+      firstName,
+      lastName,
+      email,
+      currentPassword || "", // Use currentPassword if provided, otherwise an empty string
+      newPassword || "" // Use newPassword if provided, otherwise an empty string
+    );
+
     onClose(); // Close the modal after submission
   };
 
@@ -72,14 +79,14 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         />
         <input
           type="password"
-          placeholder="Current Password"
+          placeholder="Current Password (leave blank if not changing)"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           className="border border-gray-300 rounded-md p-2 mb-4 w-full"
         />
         <input
           type="password"
-          placeholder="New Password"
+          placeholder="New Password (leave blank if not changing)"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           className="border border-gray-300 rounded-md p-2 mb-4 w-full"
@@ -95,16 +102,12 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           onClick={handleSubmit}
           className="bg-blue-500 text-white rounded-md p-2 w-full hover:bg-blue-600 transition"
         >
-          Submit
+          Update Profile
         </button>
-        <button
-          onClick={onClose}
-          className="bg-gray-300 text-gray-700 rounded-md p-2 w-full mt-2 hover:bg-gray-400 transition"
-        >
+        {message && <p className="text-red-500 mt-2">{message}</p>}
+        <button onClick={onClose} className="mt-4 text-gray-500 underline">
           Cancel
         </button>
-        {message && <p className="text-red-500 mt-2">{message}</p>}{" "}
-        {/* Display success or error message */}
       </div>
     </div>
   );

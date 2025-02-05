@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 // Define the User interface
 interface User {
+  id: any;
   first_name: string;
   last_name: string;
   email: string;
