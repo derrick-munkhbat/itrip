@@ -1,4 +1,4 @@
-"redis-start" - make sure to start redis server 
+"redis-server" - make sure to start redis server 
 "redis-cli" - to check redis address
 "ping" - to check if its running, if so, will display "pong"
 
