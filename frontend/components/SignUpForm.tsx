@@ -60,55 +60,59 @@ const SignUpForm: React.FC = () => {
   };
 
   return (
-    <form
-      className="flex flex-col gap-5 justify-center w-2/5"
-      onSubmit={handleSubmit}
-    >
-      <input
-        type="text"
-        placeholder="Enter your first name"
-        className="flex-1 p-2 border border-gray-300 rounded"
-        value={firstName}
-        onChange={(e) => setFirstName(e.target.value)}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Enter your last name"
-        className="flex-1 p-2 border border-gray-300 rounded"
-        value={lastName}
-        onChange={(e) => setLastName(e.target.value)}
-        required
-      />
-      <input
-        type="email"
-        placeholder="Enter your email"
-        className="flex-1 p-2 border border-gray-300 rounded"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Enter your password"
-        className="flex-1 p-2 border border-gray-300 rounded"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button type="submit" className="p-2 bg-blue-500 text-white rounded">
-        Sign Up
-      </button>
-      <button
-        type="button" // Prevent form submission
-        onClick={handleLoginClick} // Handle login button click
-        className="p-2 bg-blue-500 text-white rounded"
+    <div className="flex flex-col items-center justify-center h-screen">
+      <form
+        className="flex flex-col gap-5 justify-center w-2/5"
+        onSubmit={handleSubmit}
       >
-        Login
-      </button>
-      {loading && <p className="text-blue-500">Registering, please wait...</p>}{" "}
-      {/* Loading message */}
-    </form>
+        <input
+          type="text"
+          placeholder="Enter your first name"
+          className="flex-1 p-2 border border-gray-300 rounded"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Enter your last name"
+          className="flex-1 p-2 border border-gray-300 rounded"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          required
+        />
+        <input
+          type="email"
+          placeholder="Enter your email"
+          className="flex-1 p-2 border border-gray-300 rounded"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Enter your password"
+          className="flex-1 p-2 border border-gray-300 rounded"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit" className="p-2 bg-blue-500 text-white rounded">
+          Sign Up
+        </button>
+        <button
+          type="button" // Prevent form submission
+          onClick={handleLoginClick} // Handle login button click
+          className="p-2 bg-blue-500 text-white rounded"
+        >
+          Login
+        </button>
+        {loading && (
+          <p className="text-blue-500">Registering, please wait...</p>
+        )}{" "}
+        {/* Loading message */}
+      </form>
+    </div>
   );
 };
 

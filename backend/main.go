@@ -246,12 +246,12 @@ func main() {
 	// Create a new Fiber app
 	app := fiber.New()
 
-	// Enable CORS for all origins
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*", // Allow all origins (for development purposes)
-		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
-		AllowHeaders: "Origin, Content-Type, Accept",
-	}))
+	   // Enable CORS for all origins
+    app.Use(cors.New(cors.Config{
+        AllowOrigins: "*", // Allow all origins (for development purposes)
+        AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+        AllowHeaders: "Origin, Content-Type, Accept, Authorization", // Allow Authorization header
+    }))
 
 	// User struct to represent the user data
 	type User struct {
@@ -292,8 +292,20 @@ func main() {
         return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
     }
 
-    // Retrieve the user from the database and validate password
-    // ...
+    // Retrieve the user from the database
+    var storedPassword string
+    err := conn.QueryRow(context.Background(), "SELECT password FROM users WHERE email = $1", user.Email).Scan(&storedPassword)
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return c.Status(401).JSON(fiber.Map{"error": "Invalid email or password"})
+        }
+        return c.Status(500).JSON(fiber.Map{"error": "Error retrieving user from database"})
+    }
+
+    // Validate the password
+    if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password)); err != nil {
+        return c.Status(401).JSON(fiber.Map{"error": "Invalid email or password"})
+    }
 
     // Generate JWT token
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -314,9 +326,9 @@ func main() {
     }
 
     return c.JSON(fiber.Map{"token": tokenString})
-})
+	})
 
-app.Post("/logout", func(c *fiber.Ctx) error {
+	app.Post("/logout", func(c *fiber.Ctx) error {
     token := c.Get("Authorization")
     if token == "" {
         return c.Status(401).JSON(fiber.Map{"error": "No token provided"})
@@ -329,7 +341,7 @@ app.Post("/logout", func(c *fiber.Ctx) error {
     }
 
     return c.JSON(fiber.Map{"message": "Logged out successfully"})
-})
+	})
 
 	// Middleware to protect routes
 	app.Use(func(c *fiber.Ctx) error {
@@ -337,6 +349,9 @@ app.Post("/logout", func(c *fiber.Ctx) error {
     if token == "" {
         return c.Status(401).JSON(fiber.Map{"error": "No token provided"})
     }
+
+    // Remove "Bearer " from the token string
+    token = token[len("Bearer "):]
 
     // Check if the token exists in Redis
     email, err := redisClient.Get(context.Background(), token).Result()
@@ -349,13 +364,26 @@ app.Post("/logout", func(c *fiber.Ctx) error {
     // Set the user email in the context for further use
     c.Locals("email", email)
     return c.Next()
-})
-
-	// Protected route example
-	app.Get("/protected", func(c *fiber.Ctx) error {
-		email := c.Locals("email")
-		return c.JSON(fiber.Map{"message": "Welcome to the protected route!", "email": email})
 	})
+
+	// GET request to retrieve user data
+    app.Get("/protected", func(c *fiber.Ctx) error {
+    email := c.Locals("email") // Get the email from context
+
+    // Fetch user data from the database using the email
+    var user struct {
+        FirstName string `json:"first_name"`
+        LastName  string `json:"last_name"`
+        Email     string `json:"email"`
+    }
+
+    err := conn.QueryRow(context.Background(), "SELECT first_name, last_name, email FROM users WHERE email = $1", email).Scan(&user.FirstName, &user.LastName, &user.Email)
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": "Error retrieving user data"})
+    }
+
+    return c.JSON(user) // Return the user data as JSON
+})
 
 	// Start the server
 	log.Fatal(app.Listen(":8000"))
