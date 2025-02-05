@@ -11,3 +11,4 @@ frontend
 
 
 
+git - signing up new user and login into the userprofile; working fine before settingup the editing information.

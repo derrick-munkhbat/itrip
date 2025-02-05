@@ -68,7 +68,7 @@ const SignUpForm: React.FC = () => {
         <input
           type="text"
           placeholder="Enter your first name"
-          className="flex-1 p-2 border border-gray-300 rounded"
+          className="flex-1 p-2 border border-gray-300 rounded  "
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           required
@@ -76,7 +76,7 @@ const SignUpForm: React.FC = () => {
         <input
           type="text"
           placeholder="Enter your last name"
-          className="flex-1 p-2 border border-gray-300 rounded"
+          className="flex-1 p-2 border border-gray-300 rounded "
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           required
@@ -84,7 +84,7 @@ const SignUpForm: React.FC = () => {
         <input
           type="email"
           placeholder="Enter your email"
-          className="flex-1 p-2 border border-gray-300 rounded"
+          className="flex-1 p-2 border border-gray-300 rounded "
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -92,12 +92,12 @@ const SignUpForm: React.FC = () => {
         <input
           type="password"
           placeholder="Enter your password"
-          className="flex-1 p-2 border border-gray-300 rounded"
+          className="flex-1 p-2 border border-gray-300 rounded "
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit" className="p-2 bg-blue-500 text-white rounded">
+        <button type="submit" className="p-2 bg-blue-500 rounded text-white">
           Sign Up
         </button>
         <button
