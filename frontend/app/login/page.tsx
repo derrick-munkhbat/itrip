@@ -9,10 +9,13 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null); // State for error messages
+  const [loggingIn, setLoggingIn] = useState(false); // State for logging in
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent the default form submission
+
+    setLoggingIn(true); // Set logging in state to true
 
     const formData = {
       email,
@@ -30,7 +33,7 @@ const Login: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("User  logged in successfully:", data);
+        console.log("User   logged in successfully:", data);
         localStorage.setItem("token", data.token); // Store the token in local storage
         // Redirect to the user profile or dashboard after successful login
         router.push("/userprofile");
@@ -42,6 +45,8 @@ const Login: React.FC = () => {
     } catch (error) {
       setError("Network error occurred"); // Handle network errors
       console.error("Network error:", error);
+    } finally {
+      setLoggingIn(false); // Set logging in state to false
     }
   };
 
@@ -73,13 +78,17 @@ const Login: React.FC = () => {
         />
         {error && <p className="text-red-500">{error}</p>}{" "}
         {/* Display error message */}
-        <button type="submit" className="p-2 bg-blue-500 text-white rounded">
-          Login
-        </button>
+        {loggingIn ? (
+          <p>Logging in...</p>
+        ) : (
+          <button type="submit" className="p-2 bg-blue-500 text-white rounded">
+            Login
+          </button>
+        )}
         <button
           type="button"
           onClick={handleSignUpClick}
-          className="p-2 bg-blue-500 text-white rounded"
+          className="p-2 bg-gray-400 text-white rounded"
         >
           Sign Up
         </button>

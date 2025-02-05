@@ -2,13 +2,26 @@
 
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import useFetchUser from "@/hooks/useFetchUser";
-
 const UserProfile: React.FC = () => {
-  const { user, loading, error } = useFetchUser();
+  const { user, loading: fetchLoading, error } = useFetchUser();
+  const [loading, setLoading] = useState(true);
 
-  if (loading) {
+  useEffect(() => {
+    // Set a timeout to stop loading after 3 seconds
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+
+    // Cleanup the timer on component unmount
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Combine loading states
+  const isLoading = loading || fetchLoading;
+
+  if (isLoading) {
     return <p>Loading user data...</p>; // Loading state
   }
 

@@ -103,7 +103,7 @@ const SignUpForm: React.FC = () => {
         <button
           type="button" // Prevent form submission
           onClick={handleLoginClick} // Handle login button click
-          className="p-2 bg-blue-500 text-white rounded"
+          className="p-2 bg-gray-400 text-white rounded"
         >
           Login
         </button>
