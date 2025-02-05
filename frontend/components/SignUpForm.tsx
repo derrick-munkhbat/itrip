@@ -8,10 +8,12 @@ const SignUpForm: React.FC = () => {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [loading, setLoading] = useState(false); // Loading state
   const router = useRouter(); // Initialize useRouter
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent the default form submission
+    setLoading(true); // Set loading to true
 
     const formData = {
       first_name: firstName,
@@ -36,12 +38,19 @@ const SignUpForm: React.FC = () => {
       if (response.ok) {
         const data = await response.json(); // This will now work correctly
         console.log("User  registered successfully:", data);
+
+        // Redirect to UserProfile after a delay
+        setTimeout(() => {
+          router.push("/userprofile");
+        }, 3000); // Redirect after 3 seconds
       } else {
         const errorData = await response.json(); // Expecting JSON error response
         console.error("Error registering user:", errorData);
       }
     } catch (error) {
       console.error("Network error:", error);
+    } finally {
+      setLoading(false); // Set loading to false after the request is complete
     }
   };
 
@@ -87,7 +96,6 @@ const SignUpForm: React.FC = () => {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-
       <button type="submit" className="p-2 bg-blue-500 text-white rounded">
         Sign Up
       </button>
@@ -98,6 +106,8 @@ const SignUpForm: React.FC = () => {
       >
         Login
       </button>
+      {loading && <p className="text-blue-500">Registering, please wait...</p>}{" "}
+      {/* Loading message */}
     </form>
   );
 };
