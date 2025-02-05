@@ -1,10 +1,14 @@
+// app/components/SignUpForm.tsx
+
 import React, { useState } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 const SignUpForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const router = useRouter(); // Initialize useRouter
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent the default form submission
@@ -39,6 +43,11 @@ const SignUpForm: React.FC = () => {
     } catch (error) {
       console.error("Network error:", error);
     }
+  };
+
+  // Function to handle login button click
+  const handleLoginClick = () => {
+    router.push("/login"); // Navigate to the login page
   };
 
   return (
@@ -81,6 +90,13 @@ const SignUpForm: React.FC = () => {
 
       <button type="submit" className="p-2 bg-blue-500 text-white rounded">
         Sign Up
+      </button>
+      <button
+        type="button" // Prevent form submission
+        onClick={handleLoginClick} // Handle login button click
+        className="p-2 bg-blue-500 text-white rounded"
+      >
+        Login
       </button>
     </form>
   );
