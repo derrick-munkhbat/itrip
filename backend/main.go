@@ -198,6 +198,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -370,14 +371,16 @@ func main() {
     app.Get("/protected", func(c *fiber.Ctx) error {
     email := c.Locals("email") // Get the email from context
 
-    // Fetch user data from the database using the email
+    // Define a struct to hold user data, including UserID
     var user struct {
-        FirstName string `json:"first_name"`
-        LastName  string `json:"last_name"`
-        Email     string `json:"email"`
+        UserID    uuid.UUID `json:"user_id"`   // Add user ID field
+        FirstName string    `json:"first_name"`
+        LastName  string    `json:"last_name"`
+        Email     string    `json:"email"`
     }
 
-    err := conn.QueryRow(context.Background(), "SELECT first_name, last_name, email FROM users WHERE email = $1", email).Scan(&user.FirstName, &user.LastName, &user.Email)
+    // Fetch user data from the database using the email
+    err := conn.QueryRow(context.Background(), "SELECT user_id, first_name, last_name, email FROM users WHERE email = $1", email).Scan(&user.UserID, &user.FirstName, &user.LastName, &user.Email)
     if err != nil {
         return c.Status(500).JSON(fiber.Map{"error": "Error retrieving user data"})
     }
