@@ -1,14 +1,12 @@
-// app/userprofile/page.tsx
-
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import useFetchUser from "@/hooks/useFetchUser";
 import ProfileEditModal from "@/components/ProfileEditModal";
 
 // Define the User interface
 interface User {
-  id: string; // or number, depending on your backend
+  user_id: string; // Ensure this matches the fetched data
   first_name: string;
   last_name: string;
   email: string;
@@ -16,21 +14,10 @@ interface User {
 
 const UserProfile: React.FC = () => {
   const { user, loading: fetchLoading, error } = useFetchUser();
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    // Set a timeout to stop loading after 3 seconds
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 3000);
-
-    // Cleanup the timer on component unmount
-    return () => clearTimeout(timer);
-  }, []);
-
   // Combine loading states
-  const isLoading = loading || fetchLoading;
+  const isLoading = fetchLoading;
 
   if (isLoading) {
     return <p>Loading user data...</p>; // Loading state
@@ -39,56 +26,6 @@ const UserProfile: React.FC = () => {
   if (error) {
     return <p>{error}</p>; // Display error message
   }
-
-  const handleUpdateProfile = async (
-    firstName: string,
-    lastName: string,
-    email: string,
-    currentPassword: string,
-    newPassword: string
-  ) => {
-    if (!user) {
-      console.error("User  is null");
-      return; // Exit if user is null
-    }
-
-    console.log("User  object:", user); // Log the user object
-
-    const token = localStorage.getItem("token"); // Retrieve the token from local storage
-    const userId = user.id; // Now TypeScript knows user is not null
-
-    // Log the userId to ensure it's defined
-    console.log("User  ID:", userId);
-
-    if (!userId) {
-      console.error("User  ID is undefined");
-      return; // Exit if userId is undefined
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8000/users/${userId}`, {
-        method: "PUT", // Use PUT instead of POST for updating existing resources
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          currentPassword,
-          newPassword,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error updating profile");
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    }
-  };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
@@ -118,8 +55,7 @@ const UserProfile: React.FC = () => {
       <ProfileEditModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        user={user}
-        onUpdate={handleUpdateProfile}
+        user={user} // Pass the user object directly
       />
     </div>
   );

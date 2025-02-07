@@ -1,12 +1,10 @@
-// app/hooks/useFetchUser .ts
-
 "use client";
 
 import { useEffect, useState } from "react";
 
 // Define the User interface
 interface User {
-  id: any;
+  id: string; // Specify the type for user ID
   first_name: string;
   last_name: string;
   email: string;
@@ -36,9 +34,11 @@ const useFetchUser = () => {
         });
 
         if (response.ok) {
-          const data = await response.json(); // Type the response
+          const data: User = await response.json(); // Type the response
           console.log("Fetched user data:", data); // Log the fetched data
           setUser(data); // Update to set the user data from the response
+        } else if (response.status === 401) {
+          setError("Unauthorized: Please log in again.");
         } else {
           setError("Error fetching user data");
           console.error("Error fetching user data:", response.statusText);

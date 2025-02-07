@@ -1,56 +1,90 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+// ProfileEditModal.tsx
 
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: {
+    user_id: string; // Ensure this matches the fetched data
     first_name: string;
     last_name: string;
     email: string;
-  };
-  onUpdate: (
-    firstName: string,
-    lastName: string,
-    email: string,
-    currentPassword: string,
-    newPassword: string
-  ) => Promise<void>;
+  } | null; // Allow user to be null
 }
 
 const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   isOpen,
   onClose,
   user,
-  onUpdate,
 }) => {
-  const [firstName, setFirstName] = useState(user.first_name);
-  const [lastName, setLastName] = useState(user.last_name);
-  const [email, setEmail] = useState(user.email);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.first_name);
+      setLastName(user.last_name);
+      setEmail(user.email);
+    }
+  }, [user]);
+
   const handleSubmit = async () => {
-    // Check if new password is provided and matches the confirmation
-    if (newPassword && newPassword !== confirmPassword) {
-      setMessage("New passwords do not match.");
-      return;
+    // Log the updated data to the console
+    console.log("Updated User Data:");
+    console.log({
+      user_id: user?.user_id,
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    });
+
+    if (!user) {
+      console.error("User  is null");
+      return; // Exit if user is null
     }
 
-    // Call onUpdate with empty strings for passwords if not changing them
-    await onUpdate(
-      firstName,
-      lastName,
-      email,
-      currentPassword || "", // Use currentPassword if provided, otherwise an empty string
-      newPassword || "" // Use newPassword if provided, otherwise an empty string
-    );
+    const token = localStorage.getItem("token"); // Retrieve the token from local storage
+    const userId = user.user_id; // Access user.user_id
 
-    onClose(); // Close the modal after submission
+    try {
+      const response = await fetch(`http://localhost:8000/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error updating profile");
+      }
+
+      // Optionally, you can refresh the user data after a successful update
+      // You might want to call a function to refetch user data here
+
+      // Close the modal after successful update
+      onClose();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      setMessage("Failed to update profile. Please try again.");
+    }
   };
-
-  if (!isOpen) return null; // Don't render anything if the modal is not open
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -79,7 +113,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         />
         <input
           type="password"
-          placeholder="Current Password (leave blank if not changing)"
+          placeholder="Current Password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           className="border border-gray-300 rounded-md p-2 mb-4 w-full"
