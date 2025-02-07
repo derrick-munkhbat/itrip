@@ -54,7 +54,7 @@ const useFetchUser = () => {
     fetchUser(); // Call the fetchUser  function on mount
   }, []);
 
-  return { user, loading, error, refetch: fetchUser }; // Return refetch function
+  return { user, loading, error, fetchUser }; // Return fetchUser  function
 };
 
 export default useFetchUser;

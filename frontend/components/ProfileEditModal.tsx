@@ -63,6 +63,15 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       // Show success message
       setMessage("Profile updated successfully!");
 
+      // Log the updated user data to the console
+      console.log("Updated User Data:", {
+        user_id: user.user_id,
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        new_password: newPassword, // Optional, only if provided
+      });
+
       // Call the function to refetch user data
       onUpdate();
 
