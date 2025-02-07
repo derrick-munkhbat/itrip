@@ -368,42 +368,26 @@ func main() {
 	})
 
     // PUT request to update user information
-    app.Put("/users/:id", func(c *fiber.Ctx) error {
-    id := c.Params("id") // Get the user ID from the URL parameters
+   app.Put("/users/:id", func(c *fiber.Ctx) error {
+    id := c.Params("id")
     var user struct {
-        FirstName      string `json:"first_name"`
-        LastName       string `json:"last_name"`
-        Email          string `json:"email"`
-        CurrentPassword string `json:"current_password"` // Add current password
-        NewPassword     string `json:"new_password"`     // Add new password
+        FirstName  string `json:"first_name"`
+        LastName   string `json:"last_name"`
+        Email      string `json:"email"`
+        NewPassword string `json:"new_password"` // Optional
     }
 
-    // Parse the request body into the user struct
     if err := c.BodyParser(&user); err != nil {
         return c.Status(400).SendString("Invalid input")
     }
 
-    // Retrieve the stored password for the user
-    var storedPassword string
-    err := conn.QueryRow(context.Background(), "SELECT password FROM users WHERE user_id = $1", id).Scan(&storedPassword)
-    if err != nil {
-        return c.Status(404).SendString("User  not found")
-    }
-
-    // Verify the current password
-    if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(user.CurrentPassword)); err != nil {
-        return c.Status(401).SendString("Current password is incorrect")
-    }
-
     // Update the user's information in the database
     if user.NewPassword != "" {
-        // Hash the new password if provided
         hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.NewPassword), bcrypt.DefaultCost)
         if err != nil {
             return c.Status(500).SendString("Error hashing new password")
         }
 
-        // Update the user's information including the new password
         _, err = conn.Exec(context.Background(), "UPDATE users SET first_name = $1, last_name = $2, email = $3, password = $4 WHERE user_id = $5",
             user.FirstName, user.LastName, user.Email, hashedPassword, id)
         if err != nil {
