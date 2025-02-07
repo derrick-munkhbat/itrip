@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from "react";
 
 interface ProfileEditModalProps {
@@ -88,12 +90,48 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     }
   };
 
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete your profile? This action cannot be undone.");
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You need to be logged in to delete your profile.");
+      return;
+    }
+
+    setLoading(true); // Set loading to true
+
+    try {
+      const response = await fetch(`http://localhost:8000/users/${user.user_id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete user profile.");
+      }
+
+      alert("Your profile has been deleted successfully.");
+      onClose(); // Close the modal after deletion
+      // Optionally, you can redirect the user or log them out
+      // For example: window.location.href = "/login"; or use a logout function
+
+    } catch (error) {
+      console.error("Error deleting profile:", error);
+      alert("Failed to delete your profile. Please try again.");
+    } finally {
+      setLoading(false); // Set loading to false
+    }
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-96">
         <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
-        {loading && <p className="text-blue-500">Updating profile...</p>}{" "}
-        {/* Loading message */}
+        {loading && <p className="text-blue-500">Updating profile...</p>} {/* Loading message */}
         <input
           type="text"
           placeholder="First Name"
@@ -117,22 +155,29 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         />
         <input
           type="password"
-          placeholder="New Password"
+          placeholder="New Password (optional)"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           className="border border-gray-300 rounded-md p-2 mb-4 w-full"
         />
-        <button
-          onClick={handleSubmit}
-          className="bg-blue-500 text-white rounded-md p-2 w-full hover:bg-blue-600 transition"
-        >
-          Update Profile
-        </button>
-        {message && <p className="text-green-500 mt-4">{message}</p>}{" "}
-        {/* Success or error message */}
+        {message && <p className="text-green-500 mb-4">{message}</p>}
+        <div className="flex justify-between">
+          <button
+            onClick={handleSubmit}
+            className="bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600 transition"
+          >
+            Save Changes
+          </button>
+          <button
+            onClick={handleDelete}
+            className="bg-red-500 text-white rounded-md p-2 hover:bg-red-600 transition"
+          >
+            Delete Profile
+          </button>
+        </div>
         <button
           onClick={onClose}
-          className="bg-gray-300 text-black rounded-md p-2 w-full mt-4 hover:bg-gray-400 transition"
+          className="mt-4 text-gray-500 underline"
         >
           Cancel
         </button>
