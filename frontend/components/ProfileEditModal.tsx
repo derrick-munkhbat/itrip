@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 
-// ProfileEditModal.tsx
-
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,20 +9,21 @@ interface ProfileEditModalProps {
     last_name: string;
     email: string;
   } | null; // Allow user to be null
+  onUpdate: () => void; // Function to refetch user data
 }
 
 const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   isOpen,
   onClose,
   user,
+  onUpdate,
 }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false); // Loading state
 
   useEffect(() => {
     if (user) {
@@ -35,54 +34,48 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   }, [user]);
 
   const handleSubmit = async () => {
-    // Log the updated data to the console
-    console.log("Updated User Data:");
-    console.log({
-      user_id: user?.user_id,
-      first_name: firstName,
-      last_name: lastName,
-      email: email,
-      currentPassword: currentPassword,
-      newPassword: newPassword,
-    });
-
-    if (!user) {
-      console.error("User  is null");
-      return; // Exit if user is null
-    }
-
-    const token = localStorage.getItem("token"); // Retrieve the token from local storage
-    const userId = user.user_id; // Access user.user_id
+    const token = localStorage.getItem("token");
+    setLoading(true); // Set loading to true
 
     try {
-      const response = await fetch(`http://localhost:8000/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          currentPassword,
-          newPassword,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:8000/users/${user.user_id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            new_password: newPassword, // Optional
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Error updating profile");
       }
 
-      // Optionally, you can refresh the user data after a successful update
-      // You might want to call a function to refetch user data here
+      // Show success message
+      setMessage("Profile updated successfully!");
 
-      // Close the modal after successful update
-      onClose();
+      // Call the function to refetch user data
+      onUpdate();
+
+      // Set a timeout to clear the message after 3 seconds
+      setTimeout(() => {
+        setMessage("");
+        onClose(); // Close the modal after the timeout
+      }, 3000);
     } catch (error) {
       console.error("Error updating profile:", error);
       setMessage("Failed to update profile. Please try again.");
+    } finally {
+      setLoading(false); // Set loading to false
     }
   };
 
@@ -90,6 +83,8 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-96">
         <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
+        {loading && <p className="text-blue-500">Updating profile...</p>}{" "}
+        {/* Loading message */}
         <input
           type="text"
           placeholder="First Name"
@@ -113,23 +108,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         />
         <input
           type="password"
-          placeholder="Current Password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          className="border border-gray-300 rounded-md p-2 mb-4 w-full"
-        />
-        <input
-          type="password"
-          placeholder="New Password (leave blank if not changing)"
+          placeholder="New Password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          className="border border-gray-300 rounded-md p-2 mb-4 w-full"
-        />
-        <input
-          type="password"
-          placeholder="Confirm New Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
           className="border border-gray-300 rounded-md p-2 mb-4 w-full"
         />
         <button
@@ -138,8 +119,12 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         >
           Update Profile
         </button>
-        {message && <p className="text-red-500 mt-2">{message}</p>}
-        <button onClick={onClose} className="mt-4 text-gray-500 underline">
+        {message && <p className="text-green-500 mt-4">{message}</p>}{" "}
+        {/* Success or error message */}
+        <button
+          onClick={onClose}
+          className="bg-gray-300 text-black rounded-md p-2 w-full mt-4 hover:bg-gray-400 transition"
+        >
           Cancel
         </button>
       </div>

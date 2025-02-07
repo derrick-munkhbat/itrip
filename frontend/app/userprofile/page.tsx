@@ -4,17 +4,14 @@ import React, { useState } from "react";
 import useFetchUser from "@/hooks/useFetchUser";
 import ProfileEditModal from "@/components/ProfileEditModal";
 
-// Define the User interface
-interface User {
-  user_id: string; // Ensure this matches the fetched data
-  first_name: string;
-  last_name: string;
-  email: string;
-}
-
 const UserProfile: React.FC = () => {
-  const { user, loading: fetchLoading, error } = useFetchUser();
+  const { user, loading: fetchLoading, error, refetch } = useFetchUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Define the onUpdate function to refetch user data
+  const handleUpdate = () => {
+    refetch(); // Call the refetch function to get updated user data
+  };
 
   // Combine loading states
   const isLoading = fetchLoading;
@@ -52,11 +49,14 @@ const UserProfile: React.FC = () => {
         <p>No user data available.</p>
       )}
 
-      <ProfileEditModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        user={user} // Pass the user object directly
-      />
+      {isModalOpen && (
+        <ProfileEditModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          user={user}
+          onUpdate={handleUpdate} // Pass the onUpdate function
+        />
+      )}
     </div>
   );
 };
