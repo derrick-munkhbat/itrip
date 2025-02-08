@@ -263,28 +263,50 @@ func main() {
 	}
 
 	// POST request to register a new user
-	app.Post("/register", func(c *fiber.Ctx) error {
-		var user User
-		if err := c.BodyParser(&user); err != nil {
-			return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
-		}
+app.Post("/register", func(c *fiber.Ctx) error {
+    var user User
+    if err := c.BodyParser(&user); err != nil {
+        return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+    }
 
-		// Hash the password
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": "Error hashing password"})
-		}
+    // Hash the password
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": "Error hashing password"})
+    }
 
-		// Insert the user into the database
-		_, err = conn.Exec(context.Background(), "INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4)",
-			user.FirstName, user.LastName, user.Email, hashedPassword)
-		if err != nil {
-			log.Println("Error saving user to database:", err)
-			return c.Status(500).JSON(fiber.Map{"error": "Error saving user to database"})
-		}
+    // Insert the user into the database
+    _, err = conn.Exec(context.Background(), "INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4)",
+        user.FirstName, user.LastName, user.Email, hashedPassword)
+    if err != nil {
+        log.Println("Error saving user to database:", err)
+        return c.Status(500).JSON(fiber.Map{"error": "Error saving user to database"})
+    }
 
-		return c.Status(201).JSON(fiber.Map{"message": "User  registered successfully"})
-	})
+    // Generate JWT token
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+        "email": user.Email,
+        "exp":   time.Now().Add(time.Hour * 1).Unix(), // Token expiration time
+    })
+
+    // Sign the token with the secret key
+    tokenString, err := token.SignedString(jwtSecret)
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": "Could not generate token"})
+    }
+
+    // Optionally store the token in Redis or any other storage
+    // err = redisClient.Set(context.Background(), tokenString, user.Email, time.Hour).Err()
+    // if err != nil {
+    //     return c.Status(500).JSON(fiber.Map{"error": "Could not store token in Redis"})
+    // }
+
+    // Return the token and a success message
+    return c.Status(201).JSON(fiber.Map{
+        "message": "User  registered successfully",
+        "token":   tokenString, // Include the token in the response
+    })
+})
 
 	// POST request to login a user
 	app.Post("/login", func(c *fiber.Ctx) error {
