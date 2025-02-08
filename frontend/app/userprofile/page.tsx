@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
 import useFetchUser from "@/hooks/useFetchUser";
 import ProfileEditModal from "@/components/ProfileEditModal";
 
@@ -8,6 +9,7 @@ const UserProfile: React.FC = () => {
   const { user, loading, error, fetchUser } = useFetchUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refetchMessage, setRefetchMessage] = useState("");
+  const router = useRouter(); // Initialize useRouter for navigation
 
   const handleUpdate = async () => {
     setRefetchMessage(""); // Clear any previous messages
@@ -38,6 +40,11 @@ const UserProfile: React.FC = () => {
     await fetchUser(); // Refresh user data when the modal is closed
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Clear the token from local storage
+    router.push("/login"); // Redirect to the login page
+  };
+
   if (loading) {
     return <p>Loading user data...</p>;
   }
@@ -66,6 +73,12 @@ const UserProfile: React.FC = () => {
             className="bg-blue-500 text-white rounded-md p-2 mt-4 hover:bg-blue-600 transition"
           >
             Edit Profile
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white rounded-md p-2 mt-4 hover:bg-red-600 transition"
+          >
+            Logout
           </button>
         </div>
       ) : (

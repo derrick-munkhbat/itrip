@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const Login: React.FC = () => {
@@ -9,6 +9,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null); // State for error messages
   const [loggingIn, setLoggingIn] = useState(false); // State for logging in
   const [showLoggingInMessage, setShowLoggingInMessage] = useState(false); // State for showing logging in message
+  const [showPassword, setShowPassword] = useState(false); // State for showing password
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,11 +22,6 @@ const Login: React.FC = () => {
       email,
       password,
     };
-
-    // Set a timeout to ensure the logging in message is shown for at least 5 seconds
-    const timeoutId = setTimeout(() => {
-      setShowLoggingInMessage(true);
-    }, 5000);
 
     try {
       const response = await fetch("http://localhost:8000/login", {
@@ -51,10 +47,8 @@ const Login: React.FC = () => {
       setError("Network error occurred"); // Handle network errors
       console.error("Network error:", error);
     } finally {
-      clearTimeout(timeoutId); // Clear the timeout
       setLoggingIn(false); // Set logging in state to false
-      // Hide the logging in message after the login process is complete
-      setShowLoggingInMessage(false);
+      setShowLoggingInMessage(false); // Hide the logging in message after the login process is complete
     }
   };
 
@@ -76,14 +70,24 @@ const Login: React.FC = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <input
-          type="password"
-          placeholder="Enter your password"
-          className="flex-1 p-2 border border-gray-300 rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="flex items-center">
+          <input
+            type={showPassword ? "text" : "password"} // Toggle between text and password
+            placeholder="Enter your password"
+            className="flex-1 p-2 border border-gray-300 rounded"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <label className="ml-2">
+            <input
+              type="checkbox"
+              checked={showPassword}
+              onChange={() => setShowPassword(!showPassword)} // Toggle showPassword state
+            />
+            Show
+          </label>
+        </div>
         {error && <p className="text-red-500">{error}</p>}{" "}
         {/* Display error message */}
         {showLoggingInMessage && <p>Logging in...</p>}{" "}

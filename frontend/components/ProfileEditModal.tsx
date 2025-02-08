@@ -25,6 +25,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false); // Loading state
+  const [showPassword, setShowPassword] = useState(false); // State for showing password
   const router = useRouter(); // Initialize useRouter for navigation
 
   useEffect(() => {
@@ -159,18 +160,28 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           onChange={(e) => setEmail(e.target.value)}
           className="border border-gray-300 rounded-md p-2 mb-4 w-full"
         />
-        <input
-          type="password"
-          placeholder="New Password (optional)"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          className="border border-gray-300 rounded-md p-2 mb-4 w-full"
-        />
+        <div className="flex items-center mb-4">
+          <input
+            type={showPassword ? "text" : "password"} // Toggle between text and password
+            placeholder="New Password (optional)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="border border-gray-300 rounded-md p-2 flex-1"
+          />
+          <label className="ml-2">
+            <input
+              type="checkbox"
+              checked={showPassword}
+              onChange={() => setShowPassword(!showPassword)} // Toggle showPassword state
+            />
+            Show
+          </label>
+        </div>
         {message && <p className="text-green-500 mb-4">{message}</p>}
         <div className="flex justify-between">
           <button
             onClick={handleSubmit}
-            className=" bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600"
+            className="bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600"
             disabled={loading} // Disable button while loading
           >
             Save Changes
