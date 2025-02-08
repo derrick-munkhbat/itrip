@@ -59,10 +59,12 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Error updating profile:", errorData); // Log the error
         throw new Error(errorData.message || "Error updating profile");
       }
 
-      // Log the updated user data to the console
+      // Log the token and updated user data to the console
+      console.log("Token used for update:", token); // Log the token
       console.log("Updated User Data:", {
         user_id: user.user_id,
         first_name: firstName,

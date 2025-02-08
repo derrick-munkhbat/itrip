@@ -10,11 +10,18 @@ const UserProfile: React.FC = () => {
   const [refetchMessage, setRefetchMessage] = useState("");
 
   const handleUpdate = async () => {
-    setRefetchMessage("");
+    setRefetchMessage(""); // Clear any previous messages
 
     try {
-      await fetchUser(); // Call the fetch function to get updated user data
-      setRefetchMessage("User  data refetched successfully!");
+      // Call the fetch function to get updated user data
+      await fetchUser();
+
+      // Check if the user data was successfully fetched
+      if (user) {
+        setRefetchMessage("User  data refetched successfully!");
+      } else {
+        throw new Error("User  data is null after refetching.");
+      }
 
       // Set a timeout to clear the message after 3 seconds
       setTimeout(() => {
@@ -41,6 +48,7 @@ const UserProfile: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
+      {refetchMessage && <p className="text-green-500">{refetchMessage}</p>}
       <h1 className="text-2xl font-bold">User Profile</h1>
       {user ? (
         <div className="mt-4">
@@ -63,13 +71,12 @@ const UserProfile: React.FC = () => {
       ) : (
         <p>No user data available.</p>
       )}
-
       {isModalOpen && (
         <ProfileEditModal
           isOpen={isModalOpen}
           onClose={handleModalClose}
           user={user}
-          onUpdate={handleUpdate}
+          onUpdate={handleUpdate} // Pass the handleUpdate function
         />
       )}
     </div>

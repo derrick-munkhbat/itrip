@@ -1,8 +1,6 @@
-// app/login/page.tsx
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const Login: React.FC = () => {
@@ -10,17 +8,24 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null); // State for error messages
   const [loggingIn, setLoggingIn] = useState(false); // State for logging in
+  const [showLoggingInMessage, setShowLoggingInMessage] = useState(false); // State for showing logging in message
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevent the default form submission
 
     setLoggingIn(true); // Set logging in state to true
+    setShowLoggingInMessage(true); // Show the logging in message
 
     const formData = {
       email,
       password,
     };
+
+    // Set a timeout to ensure the logging in message is shown for at least 5 seconds
+    const timeoutId = setTimeout(() => {
+      setShowLoggingInMessage(true);
+    }, 5000);
 
     try {
       const response = await fetch("http://localhost:8000/login", {
@@ -33,7 +38,7 @@ const Login: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("User   logged in successfully:", data);
+        console.log("User  logged in successfully:", data);
         localStorage.setItem("token", data.token); // Store the token in local storage
         // Redirect to the user profile or dashboard after successful login
         router.push("/userprofile");
@@ -46,7 +51,10 @@ const Login: React.FC = () => {
       setError("Network error occurred"); // Handle network errors
       console.error("Network error:", error);
     } finally {
+      clearTimeout(timeoutId); // Clear the timeout
       setLoggingIn(false); // Set logging in state to false
+      // Hide the logging in message after the login process is complete
+      setShowLoggingInMessage(false);
     }
   };
 
@@ -78,13 +86,15 @@ const Login: React.FC = () => {
         />
         {error && <p className="text-red-500">{error}</p>}{" "}
         {/* Display error message */}
-        {loggingIn ? (
-          <p>Logging in...</p>
-        ) : (
-          <button type="submit" className="p-2 bg-blue-500 text-white rounded">
-            Login
-          </button>
-        )}
+        {showLoggingInMessage && <p>Logging in...</p>}{" "}
+        {/* Show logging in message */}
+        <button
+          type="submit"
+          className="p-2 bg-blue-500 text-white rounded"
+          disabled={loggingIn}
+        >
+          Login
+        </button>
         <button
           type="button"
           onClick={handleSignUpClick}

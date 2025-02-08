@@ -15,40 +15,39 @@ const useFetchUser = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUser = useCallback(async (): Promise<void> => {
-    const token = localStorage.getItem("token"); // Retrieve the token from local storage
+ const fetchUser = useCallback(async (): Promise<void> => {
+   const token = localStorage.getItem("token");
 
-    if (!token) {
-      setError("No token found");
-      setLoading(false);
-      return;
-    }
+   if (!token) {
+     setError("No token found");
+     setLoading(false);
+     return;
+   }
 
-    try {
-      const response = await fetch("http://localhost:8000/protected", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
-        },
-      });
+   try {
+     const response = await fetch("http://localhost:8000/protected", {
+       method: "GET",
+       headers: {
+         Authorization: `Bearer ${token}`,
+       },
+     });
 
-      if (response.ok) {
-        const data: User = await response.json(); // Type the response
-        console.log("Fetched user data:", data); // Log the fetched data
-        setUser(data); // Update to set the user data from the response
-      } else if (response.status === 401) {
-        setError("Unauthorized: Please log in again.");
-      } else {
-        setError("Error fetching user data");
-        console.error("Error fetching user data:", response.statusText);
-      }
-    } catch (error) {
-      setError("Network error");
-      console.error("Network error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+     if (response.ok) {
+       const data: User = await response.json();
+       console.log("Fetched user data:", data);
+       setUser(data);
+     } else {
+       const errorData = await response.json();
+       console.error("Error fetching user data:", errorData); // Log the error details
+       setError(errorData.message || "Error fetching user data");
+     }
+   } catch (error) {
+     console.error("Network error:", error); // Log network errors
+     setError("Network error");
+   } finally {
+     setLoading(false);
+   }
+ }, []);
 
   useEffect(() => {
     fetchUser(); // Call the fetchUser  function on mount
