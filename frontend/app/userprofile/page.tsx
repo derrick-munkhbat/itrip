@@ -1,21 +1,19 @@
-'use client'
+"use client";
 
 import React, { useState } from "react";
 import useFetchUser from "@/hooks/useFetchUser";
 import ProfileEditModal from "@/components/ProfileEditModal";
 
 const UserProfile: React.FC = () => {
-  const { user, loading: fetchLoading, error, fetchUser  } = useFetchUser ();
+  const { user, loading, error, fetchUser } = useFetchUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loadingRefetch, setLoadingRefetch] = useState(false);
   const [refetchMessage, setRefetchMessage] = useState("");
 
   const handleUpdate = async () => {
-    setLoadingRefetch(true);
     setRefetchMessage("");
 
     try {
-      await fetchUser (); // Call the fetch function to get updated user data
+      await fetchUser(); // Call the fetch function to get updated user data
       setRefetchMessage("User  data refetched successfully!");
 
       // Set a timeout to clear the message after 3 seconds
@@ -25,14 +23,15 @@ const UserProfile: React.FC = () => {
     } catch (error) {
       console.error("Error during refetch:", error);
       setRefetchMessage("Failed to refetch user data.");
-    } finally {
-      setLoadingRefetch(false);
     }
   };
 
-  const isLoading = fetchLoading || loadingRefetch;
+  const handleModalClose = async () => {
+    setIsModalOpen(false);
+    await fetchUser(); // Refresh user data when the modal is closed
+  };
 
-  if (isLoading) {
+  if (loading) {
     return <p>Loading user data...</p>;
   }
 
@@ -42,7 +41,7 @@ const UserProfile: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-2xl font-bold">User  Profile</h1>
+      <h1 className="text-2xl font-bold">User Profile</h1>
       {user ? (
         <div className="mt-4">
           <p>
@@ -68,14 +67,11 @@ const UserProfile: React.FC = () => {
       {isModalOpen && (
         <ProfileEditModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={handleModalClose}
           user={user}
-          onUpdate={handleUpdate} // Pass the handleUpdate function
+          onUpdate={handleUpdate}
         />
       )}
-
-      {refetchMessage && <p className="text-green-500 mt-4">{refetchMessage}</p>
-      }
     </div>
   );
 };

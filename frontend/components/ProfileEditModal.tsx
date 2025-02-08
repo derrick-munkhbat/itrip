@@ -1,6 +1,5 @@
-'use client'
-
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter from next/navigation
 
 interface ProfileEditModalProps {
   isOpen: boolean;
@@ -26,6 +25,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false); // Loading state
+  const router = useRouter(); // Initialize useRouter for navigation
 
   useEffect(() => {
     if (user) {
@@ -62,9 +62,6 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         throw new Error(errorData.message || "Error updating profile");
       }
 
-      // Show success message
-      setMessage("Profile updated successfully!");
-
       // Log the updated user data to the console
       console.log("Updated User Data:", {
         user_id: user.user_id,
@@ -73,6 +70,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         email: email,
         new_password: newPassword, // Optional, only if provided
       });
+
+      // Show success message
+      setMessage("Profile updated successfully!");
 
       // Call the function to refetch user data
       onUpdate();
@@ -91,7 +91,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm("Are you sure you want to delete your profile? This action cannot be undone.");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your profile? This action cannot be undone."
+    );
     if (!confirmDelete) return;
 
     const token = localStorage.getItem("token");
@@ -103,22 +105,23 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     setLoading(true); // Set loading to true
 
     try {
-      const response = await fetch(`http://localhost:8000/users/${user.user_id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:8000/users/${user.user_id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete user profile.");
       }
 
       alert("Your profile has been deleted successfully.");
-      onClose(); // Close the modal after deletion
-      // Optionally, you can redirect the user or log them out
-      // For example: window.location.href = "/login"; or use a logout function
-
+      localStorage.removeItem("token"); // Clear the token from local storage
+      router.push("/login"); // Redirect to the login page
     } catch (error) {
       console.error("Error deleting profile:", error);
       alert("Failed to delete your profile. Please try again.");
@@ -131,7 +134,8 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-96">
         <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
-        {loading && <p className="text-blue-500">Updating profile...</p>} {/* Loading message */}
+        {loading && <p className="text-blue-500">Updating profile...</p>}{" "}
+        {/* Loading message */}
         <input
           type="text"
           placeholder="First Name"
@@ -164,20 +168,22 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         <div className="flex justify-between">
           <button
             onClick={handleSubmit}
-            className="bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600 transition"
+            className=" bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600"
+            disabled={loading} // Disable button while loading
           >
             Save Changes
           </button>
           <button
             onClick={handleDelete}
-            className="bg-red-500 text-white rounded-md p-2 hover:bg-red-600 transition"
+            className="bg-red-500 text-white rounded-md px-4 py-2 hover:bg-red-600"
+            disabled={loading} // Disable button while loading
           >
             Delete Profile
           </button>
         </div>
         <button
           onClick={onClose}
-          className="mt-4 text-gray-500 underline"
+          className="mt-4 text-gray-500 hover:underline"
         >
           Cancel
         </button>

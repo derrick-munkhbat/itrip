@@ -403,7 +403,25 @@ func main() {
     }
 
     return c.Status(200).SendString("User  information updated successfully")
-})
+    })
+
+// DELETE request to delete a user profile
+    app.Delete("/users/:id", func(c *fiber.Ctx) error {
+        id := c.Params("id")
+
+    // Here you would typically check the user's authentication and authorization
+    // For example, you might check a JWT token to ensure the user is logged in
+
+    // Delete the user from the database
+    _, err := conn.Exec(context.Background(), "DELETE FROM users WHERE user_id = $1", id)
+    if err != nil {
+        log.Println("Error deleting user:", err)
+        return c.Status(500).JSON(fiber.Map{"error": "Failed to delete user"})
+    }
+
+    // Respond with a success message
+    return c.Status(204).SendString("") // 204 No Content
+    })
 
 	// GET request to retrieve user data
     app.Get("/protected", func(c *fiber.Ctx) error {
@@ -424,7 +442,7 @@ func main() {
     }
 
     return c.JSON(user) // Return the user data as JSON
-})
+    })
 
 	// Start the server
 	log.Fatal(app.Listen(":8000"))

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 // Define the User interface
 interface User {
@@ -15,7 +15,7 @@ const useFetchUser = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUser = async (): Promise<void> => {
+  const fetchUser = useCallback(async (): Promise<void> => {
     const token = localStorage.getItem("token"); // Retrieve the token from local storage
 
     if (!token) {
@@ -48,11 +48,11 @@ const useFetchUser = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUser(); // Call the fetchUser  function on mount
-  }, []);
+  }, [fetchUser]);
 
   return { user, loading, error, fetchUser }; // Return fetchUser  function
 };
